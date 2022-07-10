@@ -109,13 +109,13 @@ loader.load('models/Plane.glb', function (gltf) {
     terrain.children[0].matrixAutoUpdate = false;
 
 
-    // var xyzScale = terrain.children[0].scale;
-    // // console.log(xyzScale)
-    // for(var i = 0; i < terrain.children[0].geometry.attributes.position.array.length; i += 3) {
-    //     terrain.children[0].geometry.attributes.position.array[i] *= xyzScale.x;
-    //     terrain.children[0].geometry.attributes.position.array[i + 1] *= xyzScale.y;
-    //     terrain.children[0].geometry.attributes.position.array[i + 2] *= xyzScale.z;
-    // }
+    var xyzScale = terrain.children[0].scale;
+    // console.log(xyzScale)
+    for(var i = 0; i < terrain.children[0].geometry.attributes.position.array.length; i += 3) {
+        terrain.children[0].geometry.attributes.position.array[i] *= xyzScale.x;
+        terrain.children[0].geometry.attributes.position.array[i + 1] *= xyzScale.y;
+        terrain.children[0].geometry.attributes.position.array[i + 2] *= xyzScale.z;
+    }
 
 
     
