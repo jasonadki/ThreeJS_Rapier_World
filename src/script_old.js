@@ -104,7 +104,7 @@ loader.load('models/planeTorus.glb', function (gltf) {
 
     // // Rotate the terrain 90 degrees around the y-axis.
     // terrain.rotation.z = Math.PI / 2;
-
+    
 
 
     // scale the geometry to fit the scene
@@ -112,43 +112,43 @@ loader.load('models/planeTorus.glb', function (gltf) {
 
 
 
-
-
+    
+    
     var vertices = terrain.children[0].geometry.attributes.position.array;
     // var vertices = terrain.children[0].matrix.elements;
-
+    
     // Get the indices of the vertices.
     var indices = terrain.children[0].geometry.index.array;
-
+    
 
     terrain.children[0].matrixAutoUpdate = false;
     // terrain.children.matrixAutoUpdate = false;
 
     var xyzScale = terrain.children[0].scale;
     // console.log(xyzScale)
-    for (var i = 0; i < terrain.children[0].geometry.attributes.position.array.length; i += 3) {
+    for(var i = 0; i < terrain.children[0].geometry.attributes.position.array.length; i += 3) {
         terrain.children[0].geometry.attributes.position.array[i] *= xyzScale.x;
         terrain.children[0].geometry.attributes.position.array[i + 1] *= xyzScale.y;
         terrain.children[0].geometry.attributes.position.array[i + 2] *= xyzScale.z;
     }
 
     // Swap the y and z values of the terrain.
-    for (var i = 0; i < terrain.children[0].geometry.attributes.position.array.length; i += 3) {
+    for(var i = 0; i < terrain.children[0].geometry.attributes.position.array.length; i += 3) {
         var temp = terrain.children[0].geometry.attributes.position.array[i + 1];
         terrain.children[0].geometry.attributes.position.array[i + 1] = terrain.children[0].geometry.attributes.position.array[i + 2];
         terrain.children[0].geometry.attributes.position.array[i + 2] = temp;
     }
 
     // Flip the z values of the terrain.
-    for (var i = 0; i < terrain.children[0].geometry.attributes.position.array.length; i += 3) {
+    for(var i = 0; i < terrain.children[0].geometry.attributes.position.array.length; i += 3) {
         terrain.children[0].geometry.attributes.position.array[i + 1] *= -1;
     }
+    
 
 
 
 
-
-
+    
 
     // For each index, get the 3 vertices that form a triangle.
     var triangles = [];
@@ -173,41 +173,53 @@ loader.load('models/planeTorus.glb', function (gltf) {
 
     }
 
-    // User vertices and indices to draw lines between the vertices.
-    var points = [];
-    var pointIndices = [];
-    for (var i = 0; i < indices.length; i += 3) {
+    // Add PolyhedronGeometry of the triangles to the world.
+    for(var i = 0; i < indices.length; i += 3) {
         var a = indices[i];
         var b = indices[i + 1];
         var c = indices[i + 2];
-        points.push(new THREE.Vector3(vertices[a * 3], vertices[a * 3 + 1], vertices[a * 3 + 2]));
-        points.push(new THREE.Vector3(vertices[b * 3], vertices[b * 3 + 1], vertices[b * 3 + 2]));
-        points.push(new THREE.Vector3(vertices[c * 3], vertices[c * 3 + 1], vertices[c * 3 + 2]));
-        pointIndices.push(i);
-        pointIndices.push(i + 1);
-        pointIndices.push(i + 2);
-    }
-    var edges = new THREE.BufferGeometry().setFromPoints(points);
-    var material = new THREE.LineBasicMaterial({ color: 0x0000FF });
-    var line = new THREE.Line(edges, material);
-    scene.add(line);
-
-    console.log(points)
-
-    var expandedVertices = [];
-    var expandedIndices = [];
-    for (var i = 0; i < points.length; i++) {
-        expandedVertices.push(points[i].x);
-        expandedVertices.push(points[i].y);
-        expandedVertices.push(points[i].z);
-
-        expandedIndices.push(i);
+        var triangle = new THREE.PolyhedronGeometry(
+            [
+                vertices[a * 3],
+                vertices[a * 3 + 1],
+                vertices[a * 3 + 2],
+                vertices[b * 3],
+                vertices[b * 3 + 1],
+                vertices[b * 3 + 2],
+                vertices[c * 3],
+                vertices[c * 3 + 1],
+                vertices[c * 3 + 2]
+            ],
+            [
+                0, 1, 2
+            ],
+            1,
+            0);
+        var mesh = new THREE.Mesh(triangle, new THREE.MeshPhongMaterial({ color: Math.random() * 0xffffff }));
+        scene.add(mesh);
+        // bodys.push(mesh);
     }
 
-    // Print length of expandedVertices and expandedIndices.
-    console.log(expandedVertices.length);
-    console.log(expandedIndices.length);
 
+
+    // var i = 15;
+    // const triangleShape = new THREE.Shape(); 
+    //     // Move to first point of indice coordinates.
+    //     triangleShape.moveTo(vertices[indices[i] * 3], vertices[indices[i] * 3 + 1], vertices[indices[i] * 3 + 2]);
+    //     // Add the second point of the indice coordinates.
+    //     triangleShape.lineTo(vertices[indices[i + 1] * 3], vertices[indices[i + 1] * 3 + 1], vertices[indices[i + 1] * 3 + 2]);
+    //     // Add the third point of the indice coordinates.
+    //     triangleShape.lineTo(vertices[indices[i + 2] * 3], vertices[indices[i + 2] * 3 + 1], vertices[indices[i + 2] * 3 + 2]);
+    //     // Close the shape.
+    //     triangleShape.closePath();
+    //     // Create a geometry from the shape.
+    //     var geometry = new THREE.ShapeGeometry(triangleShape);
+    //     // Create a material.
+    //     var material = new THREE.MeshPhongMaterial({ color: Math.random() * 0xFFFFFF });
+    //     // Create a mesh from the geometry and material.
+    //     var mesh = new THREE.Mesh(geometry, material);
+    //     // Add the mesh to the scene.
+    //     scene.add(mesh);
 
 
 
@@ -216,10 +228,10 @@ loader.load('models/planeTorus.glb', function (gltf) {
     // Create a physics body for the terrain
     var terrainBodyDesc = RigidBodyDesc.fixed();
     var terrainBody = world.createRigidBody(terrainBodyDesc);
-    var terrainCollider = ColliderDesc.trimesh(expandedVertices, expandedIndices);
+    var terrainCollider = ColliderDesc.trimesh(vertices, indices);
 
-    // Add the terrain to the scene
-    // scene.add(terrain);
+        // Add the terrain to the scene
+        scene.add(terrain);
     console.log(terrainCollider)
     world.createCollider(terrainCollider, terrainBody);
 })
@@ -242,7 +254,7 @@ loader.load('models/Soldier.glb', function (gltf) {
     });
     scene.add(model);
 
-
+    
 
     var gltfAnimations = gltf.animations;
     var mixer = new THREE.AnimationMixer(model);
@@ -255,38 +267,14 @@ loader.load('models/Soldier.glb', function (gltf) {
     var rigidBody = world.createRigidBody(bodyDesc);
     var dynamicCollider = ColliderDesc.ball(CONTROLLER_BODY_RADIUS);
     world.createCollider(dynamicCollider, rigidBody);
-    // var dynamicCollider = ColliderDesc.capsule(CONTROLLER_BODY_RADIUS, CONTROLLER_BODY_HEIGHT);
-    // world.createCollider(dynamicCollider, rigidBody);
 
-    // Raycast collider
-
-
-
-    characterControls = new CharacterControls(model, mixer,
-        animationsMap, orbitControls,
-        camera, 'Idle',
-        new Ray( // Y down
+    characterControls = new CharacterControls(model, mixer, 
+        animationsMap, orbitControls, 
+        camera,  'Idle',
+        new Ray( 
             { x: 0, y: 0, z: 0 },
-            { x: 0, y: -1, z: 0 }
-        ),
-        new Ray( // X left
-            { x: 0, y: 0, z: 0 },
-            { x: -1, y: 0, z: 0 }
-        ),
-        // new Ray( // X right
-        //     { x: 0, y: 0, z: 0 },
-        //     { x: 1, y: 0, z: 0 }
-        // ),
-        // new Ray( // Z forward
-        //     { x: 0, y: 0, z: 0 },
-        //     { x: 0, y: 0, z: 1 }
-        // ),
-        // new Ray( // Z backward
-        //     { x: 0, y: 0, z: 0 },
-        //     { x: 0, y: 0, z: -1 }
-        // ),
-        rigidBody
-    )
+            { x: 0, y: -1, z: 0} 
+        ), rigidBody)
 });
 
 
@@ -302,7 +290,7 @@ function body(scene, world, bodyType, colliderType, dimension, translation, rota
         bodyDesc = RigidBodyDesc.fixed();
     }
 
-
+    
 
 
     if (translation) {
@@ -334,7 +322,7 @@ function body(scene, world, bodyType, colliderType, dimension, translation, rota
     // Create collider on the global world
     world.createCollider(collider, rigidBody);
 
-
+    
 
     var bufferGeometry;
     if (colliderType === 'cube') {
@@ -351,7 +339,7 @@ function body(scene, world, bodyType, colliderType, dimension, translation, rota
     threeMesh.castShadow = true;
     threeMesh.receiveShadow = true;
     scene.add(threeMesh);
-
+    
     return { rigid: rigidBody, mesh: threeMesh };
 }
 
@@ -460,21 +448,6 @@ var sphereBody2 = body(
 );
 bodys.push(sphereBody2);
 
-
-for (var i = 0; i < 10; ++i) {
-    var sphereBody2 = body(
-        scene,
-        world,
-        'dynamic',
-        'sphere',
-        { radius: 0.7 },
-        { x: 0, y: 15, z: 0 },
-        { x: 0, y: i, z: 0 },
-        'red'
-    );
-    bodys.push(sphereBody2);
-}
-
 var cylinderBody = body(
     scene,
     world,
@@ -544,7 +517,7 @@ var gameLoop = function () {
 
     // Step the simulation forward.  
     world.step();
-
+    
     // console.log(bodys[8].rigid.translation())
     // console.log(world)
 

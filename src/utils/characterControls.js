@@ -10,7 +10,12 @@ export const CONTROLLER_BODY_RADIUS = 0.28;
 
 
 var CharacterControls = /** @class */ (function () {
-    function CharacterControls(model, mixer, animationsMap, orbitControl, camera, currentAction, ray, rigidBody) {
+    function CharacterControls(
+        model, mixer, animationsMap,
+        orbitControl, camera, currentAction,
+        ray_Y_Down, ray_X_Left,
+        rigidBody
+    ) {
         
         this.animationsMap = new Map(); // Walk, Run, Idle
 
@@ -39,7 +44,8 @@ var CharacterControls = /** @class */ (function () {
             }
         });
 
-        this.ray = ray;
+        this.ray_Y_Down = ray_Y_Down;
+        this.ray_X_Left = ray_X_Left;
         this.rigidBody = rigidBody;
 
         this.orbitControl = orbitControl;
@@ -119,20 +125,38 @@ var CharacterControls = /** @class */ (function () {
 
             this.walkDirection.y += this.lerp(this.storedFall, -9.81 * delta, 0.10);
             this.storedFall = this.walkDirection.y;
-            this.ray.origin.x = translation.x;
-            this.ray.origin.y = translation.y;
-            this.ray.origin.z = translation.z;
-            var hit = world.castRay(this.ray, 0.5, false, 0xfffffffff);
+            this.ray_Y_Down.origin.x = translation.x;
+            this.ray_Y_Down.origin.y = translation.y;
+            this.ray_Y_Down.origin.z = translation.z;
+            this.ray_X_Left.origin.x = translation.x;
+            this.ray_X_Left.origin.y = translation.y;
+            this.ray_X_Left.origin.z = translation.z;
+
+            var hit = world.castRay(this.ray_Y_Down, 0.5, false, 0xfffffffff);
+            // Check if we hit something in the y direction
             if (hit) {
-                var point = this.ray.pointAt(hit.toi);
+                var point = this.ray_Y_Down.pointAt(hit.toi);
                 var diff = translation.y - (point.y + CONTROLLER_BODY_RADIUS);
                 if (diff < 0.0) {
                     this.storedFall = 0;
-                    this.walkDirection.y = this.lerp(0, Math.abs(diff), 0.5);
+                    this.walkDirection.y = this.lerp(0, Math.abs(diff), 0.2);
                 }
             }
 
-            this.walkDirection.x = this.walkDirection.x * velocity * delta;
+            // Check if we hit something in the x direction
+            hit = world.castRay(this.ray_X_Left, 0.5, false, 0xfffffffff);
+            if (hit) {
+                var point = this.ray_X_Left.pointAt(hit.toi);
+                var diff = translation.x - (point.x + CONTROLLER_BODY_RADIUS);
+                if (diff < 0.0) {
+                    this.walkDirection.x = this.lerp(0, Math.abs(diff), 0.2);
+                } else {
+                    this.walkDirection.x = this.walkDirection.x * velocity * delta;
+                }
+            }
+
+
+            
             this.walkDirection.z = this.walkDirection.z * velocity * delta;
 
             this.rigidBody.setNextKinematicTranslation({
